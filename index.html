@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dating Finder — Match with Girls Nearby</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body { margin: 0; background: #0E0B12; }
+a { color: #FF6B8E; }
+a:hover { color: #FF9AB3; }
+button { font-family: inherit; cursor: pointer; }
+input[type=range] { accent-color: #FF3D6E; width: 100%; height: 28px; margin: 0; }
+.df-scroll::-webkit-scrollbar { display: none; }
+@keyframes dfPulse { 0% { transform: translate(-50%,-50%) scale(.4); opacity: .7; } 100% { transform: translate(-50%,-50%) scale(2.6); opacity: 0; } }
+.df-pulse { animation: dfPulse 1.8s ease-out infinite; }
+@keyframes dfIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.df-in { animation: dfIn .25s ease-out both; }
+@keyframes dfPop { from { opacity: 0; transform: translate(-50%,-50%) scale(.3); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+.df-pin { animation: dfPop .45s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes dfZoom { 0% { transform: scale(.35); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+.df-zoom { animation: dfZoom .6s cubic-bezier(.2,1.2,.4,1) both; }
+</style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-[#060408] text-[#F5F0F7] font-['Manrope',system-ui,sans-serif]">
+
+<div id="app" style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0E0B12; color: #F5F0F7; box-sizing: border-box; border-radius: 40px; box-shadow: 0 25px 60px rgba(0,0,0,0.8); border: 2px solid #221A2C;"></div>
+
+<script>
+const state = {
+    screen: 'home', // 'home', 'launch', 'intro', 'params', 'search', 'list', 'profile', 'map', 'chat'
+    size: 'M',
+    hair: 'Redhead',
+    height: 168,
+    age: 22,
+    searchProgress: 0,
+    activeProfile: null,
+    chatMessages: [],
+    chatInput: ''
+};
+
+const profilesData = [
+    // Blondes
+    { id: 16, name: 'Alice', age: 22, dist: '0.3 mi', height: 170, size: 'S', hair: 'Blonde', hairHex: '#E3C27A', bg: '#403820', top: '#E3C27A', bio: 'Model and art lover. I enjoy chic restaurants and amazing vibes in the city!', tg: '@alisa_blond', photo: 'https://i.ibb.co/yn4FMpZy/IMG-9770.jpg', lat: 50.4511, lng: 30.5244 },
+    { id: 17, name: 'Zlata', age: 21, dist: '0.9 mi', height: 168, size: 'M', hair: 'Blonde', hairHex: '#E3C27A', bg: '#403820', top: '#E3C27A', bio: 'Living for bright impressions, late-night walks, and almond iced lattes.', tg: '@zlata_sun', photo: 'https://i.ibb.co/5X41b1qV/IMG-9766.jpg', lat: 50.4431, lng: 30.5194 },
+    { id: 18, name: 'Mila', age: 23, dist: '1.4 mi', height: 173, size: 'XS', hair: 'Blonde', hairHex: '#E3C27A', bg: '#403820', top: '#E3C27A', bio: 'Into pilates, great aesthetics, and aesthetic downtown photo shoots.', tg: '@mila_style', photo: 'https://i.ibb.co/GvXMPSSQ/IMG-9767.jpg', lat: 50.4581, lng: 30.5354 },
+    { id: 19, name: 'Elizabeth', age: 20, dist: '2.0 mi', height: 165, size: 'S', hair: 'Blonde', hairHex: '#E3C27A', bg: '#403820', top: '#E3C27A', bio: 'Design student. Passionate about modern music and open-minded people.', tg: '@liza_art', photo: 'https://i.ibb.co/1tYvdZ7L/IMG-9768.jpg', lat: 50.4361, lng: 30.5044 },
+    { id: 20, name: 'Karina', age: 24, dist: '2.7 mi', height: 176, size: 'L', hair: 'Blonde', hairHex: '#E3C27A', bg: '#403820', top: '#E3C27A', bio: 'Traveler at heart. Looking for great company for cozy evenings and fun chats.', tg: '@karina_trip', photo: 'https://i.ibb.co/Xf3xTgtk/IMG-9769.jpg', lat: 50.4621, lng: 30.5114 },
+
+    // Redheads
+    { id: 1, name: 'Alina', age: 23, dist: '0.4 mi', height: 168, size: 'M', hair: 'Redhead', hairHex: '#D66A3A', bg: '#402E21', top: '#FF883D', bio: 'I love coffee, long walks, and art. Looking for someone interesting to meet up downtown!', tg: '@alina_find', photo: 'https://i.ibb.co/Hs0LfPg/IMG-9786.jpg', lat: 50.4501, lng: 30.5234 },
+    { id: 2, name: 'Kate', age: 21, dist: '1.2 mi', height: 174, size: 'S', hair: 'Redhead', hairHex: '#D66A3A', bg: '#402E21', top: '#FF883D', bio: 'Photographer and musician. If you want cool portraits and soulful talks — drop me a message!', tg: '@katy_snap', photo: 'https://i.ibb.co/q3HT13Fk/IMG-9785.jpg', lat: 50.4421, lng: 30.5184 },
+    { id: 3, name: 'Sofia', age: 24, dist: '1.9 mi', height: 165, size: 'M', hair: 'Redhead', hairHex: '#D66A3A', bg: '#402E21', top: '#FF883D', bio: 'Fitness enthusiast, loves traveling and good humor. Let’s grab some matcha!', tg: '@sonia_fit', photo: 'https://i.ibb.co/sdtCJ4fK/IMG-9784.jpg', lat: 50.4571, lng: 30.5344 },
+    { id: 4, name: 'Victoria', age: 22, dist: '2.5 mi', height: 170, size: 'L', hair: 'Redhead', hairHex: '#D66A3A', bg: '#402E21', top: '#FF883D', bio: 'Designer & cinephile. Looking for someone to chat about anything over a glass of wine.', tg: '@vicky_art', photo: 'https://i.ibb.co/kkMpjGn/IMG-9783.jpg', lat: 50.4351, lng: 30.5054 },
+    { id: 5, name: 'Maria', age: 25, dist: '3.1 mi', height: 162, size: 'XS', hair: 'Redhead', hairHex: '#D66A3A', bg: '#402E21', top: '#FF883D', bio: 'Dancing, books, and cozy coffee shops. I value sincerity and easygoing conversation.', tg: '@masha_light', photo: 'https://i.ibb.co/1Jwm1YWg/IMG-9782.jpg', lat: 50.4631, lng: 30.5124 },
+
+    // Brunettes
+    { id: 6, name: 'Milana', age: 22, dist: '0.8 mi', height: 172, size: 'S', hair: 'Brunette', hairHex: '#2E2B2A', bg: '#1A1817', top: '#404040', bio: 'Style, fashion, and night cityscapes. I love good music and trendy spots.', tg: '@milana_dark', photo: 'https://i.ibb.co/qMXyphLP/IMG-9771.jpg', lat: 50.4481, lng: 30.5204 },
+    { id: 7, name: 'Eva', age: 20, dist: '1.5 mi', height: 166, size: 'XS', hair: 'Brunette', hairHex: '#2E2B2A', bg: '#1A1817', top: '#404040', bio: 'Student, into cinema and modern art. Looking for a positive guy to hang out with.', tg: '@eva_brunette', photo: 'https://i.ibb.co/Hf5VCn1h/IMG-9772.jpg', lat: 50.4401, lng: 30.5254 },
+    { id: 8, name: 'Diana', age: 24, dist: '2.1 mi', height: 175, size: 'M', hair: 'Brunette', hairHex: '#2E2B2A', bg: '#1A1817', top: '#404040', bio: 'Model & traveler. Appreciating gorgeous views, great coffee, and pleasant company.', tg: '@diana_style', photo: 'https://i.ibb.co/nqKs4gxr/IMG-9773.jpg', lat: 50.4531, lng: 30.5154 },
+    { id: 9, name: 'Kira', age: 23, dist: '2.8 mi', height: 169, size: 'S', hair: 'Brunette', hairHex: '#2E2B2A', bg: '#1A1817', top: '#404040', bio: 'Interior designer. Adore creating cozy spaces and chatting about fascinating topics.', tg: '@kira_design', photo: 'https://i.ibb.co/htJ1Lsy/IMG-9774.jpg', lat: 50.4381, lng: 30.5304 },
+    { id: 10, name: 'Ulyana', age: 21, dist: '3.4 mi', height: 164, size: 'M', hair: 'Brunette', hairHex: '#2E2B2A', bg: '#1A1817', top: '#404040', bio: 'Bachata dancer and sports lover. You definitely won’t be bored with me!', tg: '@ulyana_dance', photo: 'https://i.ibb.co/v6jyySSV/IMG-9775.jpg', lat: 50.4601, lng: 30.5224 },
+
+    // Brown-haired
+    { id: 11, name: 'Kristina', age: 23, dist: '0.6 mi', height: 167, size: 'S', hair: 'Brown', hairHex: '#7C4A2E', bg: '#332117', top: '#8F5838', bio: 'Into psychology and yoga. Love discovering new spots around the city.', tg: '@kris_brown', photo: 'https://i.ibb.co/Tqp3CdSJ/IMG-9777.jpg', lat: 50.4491, lng: 30.5214 },
+    { id: 12, name: 'Arina', age: 22, dist: '1.1 mi', height: 171, size: 'M', hair: 'Brown', hairHex: '#7C4A2E', bg: '#332117', top: '#8F5838', bio: 'Architect. Passionate about soundtrack walks and atmospheric cozy places.', tg: '@arina_arch', photo: 'https://i.ibb.co/Vp0zXgj3/IMG-9778.jpg', lat: 50.4431, lng: 30.5194 },
+    { id: 13, name: 'Polina', age: 24, dist: '1.8 mi', height: 169, size: 'S', hair: 'Brown', hairHex: '#7C4A2E', bg: '#332117', top: '#8F5838', bio: 'Marketer, foodie at heart, and lover of casual dinner conversations.', tg: '@polina_ch', photo: 'https://i.ibb.co/35smTqb9/IMG-9779.jpg', lat: 50.4551, lng: 30.5314 },
+    { id: 14, name: 'Anastasia', age: 21, dist: '2.4 mi', height: 165, size: 'XS', hair: 'Brown', hairHex: '#7C4A2E', bg: '#332117', top: '#8F5838', bio: 'Studying languages, obsessed with travel and aesthetic locations.', tg: '@stacy_travel', photo: 'https://i.ibb.co/Z6hW0Pbb/IMG-9780.jpg', lat: 50.4371, lng: 30.5084 },
+    { id: 15, name: 'Veronika', age: 25, dist: '3.0 mi', height: 173, size: 'M', hair: 'Brown', hairHex: '#7C4A2E', bg: '#332117', top: '#8F5838', bio: 'Sports fanatic, great sense of humor, and evening car rides around town.', tg: '@nik_fun', photo: 'https://i.ibb.co/xq2rtG79/IMG-9781.jpg', lat: 50.4611, lng: 30.5144 }
+];
+
+function navigate(screenName) {
+    state.screen = screenName;
+    render();
+}
+
+function openApp() {
+    navigate('launch');
+    setTimeout(() => {
+        navigate('intro');
+    }, 1200);
+}
+
+function startApp() {
+    navigate('params');
+}
+
+function selectSize(s) {
+    state.size = s;
+    render();
+}
+
+function selectHair(h) {
+    state.hair = h;
+    render();
+}
+
+function updateHeight(e) {
+    state.height = parseInt(e.target.value);
+    // Smooth update of the display value without full re-render flickering
+    const valEl = document.getElementById('height-val');
+    if (valEl) valEl.innerText = state.height;
+}
+
+function updateAge(e) {
+    state.age = parseInt(e.target.value);
+    const valEl = document.getElementById('age-val');
+    if (valEl) valEl.innerText = state.age;
+}
+
+function startSearch() {
+    navigate('search');
+    state.searchProgress = 0;
+    const interval = setInterval(() => {
+        state.searchProgress += 5;
+        const progEl = document.getElementById('search-progress-num');
+        const gradEl = document.getElementById('search-progress-circle');
+        if (progEl) progEl.innerText = state.searchProgress;
+        if (gradEl) {
+            const deg = Math.round((state.searchProgress / 100) * 360);
+            gradEl.style.background = `conic-gradient(#FF3D6E ${deg}deg, #241D2D 0deg)`;
+        }
+        if (state.searchProgress >= 100) {
+            clearInterval(interval);
+            navigate('list');
+        }
+    }, 40);
+}
+
+function getFilteredProfiles() {
+    return profilesData.filter(p => p.hair === state.hair);
+}
+
+function openProfile(id) {
+    state.activeProfile = profilesData.find(p => p.id === id) || profilesData[0];
+    navigate('profile');
+}
+
+function openMap() {
+    navigate('map');
+}
+
+function openChat() {
+    const activeGirl = state.activeProfile || profilesData[0];
+    state.chatMessages = [
+        { sender: 'girl', text: `Hi there! 👋 I saw your profile and just wanted to say you really caught my eye. You seem so interesting!` },
+        { sender: 'girl', text: `I'm actually free right now and would love to grab a coffee or meet up somewhere nearby if you're around! 😊` }
+    ];
+    state.chatInput = '';
+    navigate('chat');
+}
+
+function sendChatMessage(e) {
+    e.preventDefault();
+    if (!state.chatInput.trim()) return;
+    state.chatMessages.push({ sender: 'me', text: state.chatInput });
+    state.chatInput = '';
+    render();
+    setTimeout(() => {
+        state.chatMessages.push({ sender: 'girl', text: 'Sounds wonderful! When can we meet? 😊' });
+        render();
+    }, 1000);
+}
+
+function render() {
+    const app = document.getElementById('app');
+    if (!app) return;
+
+    let html = '';
+
+    // 1. HOME SCREEN
+    if (state.screen === 'home') {
+        html = `
+        <div style="height: 844px; position: relative; overflow: hidden; background: #04050A; font-family: -apple-system, 'SF Pro Text', Manrope, sans-serif">
+          <div aria-hidden="true" style="position: absolute; left: 70px; top: -470px; width: 780px; height: 780px; border-radius: 50%; background: #0A1022; border: 1.5px solid #7E9BE066; box-shadow: inset 0 0 60px #2B4A9A55"></div>
+          <div aria-hidden="true" style="position: absolute; left: 130px; top: -300px; width: 560px; height: 560px; border-radius: 50%; border: 1px solid #5F7FD040"></div>
+          <div aria-hidden="true" style="position: absolute; left: -120px; top: 150px; width: 440px; height: 600px; border-radius: 50%; background: #070A14; border: 1.5px solid #6F8FD855; box-shadow: inset -20px 0 50px #1D3A8A44"></div>
+          <div aria-hidden="true" style="position: absolute; left: 150px; top: 500px; width: 520px; height: 520px; border-radius: 50%; background: #0C142C; border: 1.5px solid #4F7BE688; box-shadow: inset 0 0 70px #2F5BD055"></div>
+
+          <!-- Status Bar -->
+          <div style="position: absolute; left: 0; right: 0; top: 0; height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px 0 44px; color: #FFFFFF; z-index: 10">
+            <div style="font-size: 17px; font-weight: 700;">16:22</div>
+            <div style="display: flex; align-items: center; gap: 7px">
+              <div style="display: flex; align-items: flex-end; gap: 2px; height: 12px">
+                <span style="width: 3px; height: 4px; border-radius: 1px; background: #FFFFFF"></span>
+                <span style="width: 3px; height: 6px; border-radius: 1px; background: #FFFFFF"></span>
+                <span style="width: 3px; height: 9px; border-radius: 1px; background: #FFFFFF66"></span>
+                <span style="width: 3px; height: 12px; border-radius: 1px; background: #FFFFFF66"></span>
+              </div>
+              <svg width="17" height="12" viewBox="0 0 17 12" fill="#FFFFFF"><path d="M8.5 2.2c2.4 0 4.6.9 6.3 2.5l1.2-1.2A10.6 10.6 0 0 0 8.5.5 10.6 10.6 0 0 0 1 3.5l1.2 1.2a9 9 0 0 1 6.3-2.5zm0 3.4c1.5 0 2.9.6 3.9 1.5l1.2-1.2a7.2 7.2 0 0 0-10.2 0l1.2 1.2c1-1 2.4-1.5 3.9-1.5zm0 3.4c.6 0 1.1.2 1.5.6L8.5 11 7 9.6c.4-.4.9-.6 1.5-.6z"></path></svg>
+              <div style="position: relative; width: 27px; height: 13px; border-radius: 4px; border: 1px solid #FFFFFF77; padding: 1.5px; box-sizing: border-box">
+                <div style="width: 61%; height: 100%; border-radius: 2px; background: #FFFFFF"></div>
+                <div style="position: absolute; left: 0; right: 0; top: -1px; text-align: center; font-size: 9px; font-weight: 800; color: #04050A; line-height: 13px">61</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Apps Grid -->
+          <div style="position: absolute; left: 17px; right: 17px; top: 83px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 30px">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+              <div style="width: 60px; height: 60px; border-radius: 14px; background: #000; border: 1px solid #FFFFFF2E; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1">
+                <div style="font-family: Unbounded, sans-serif; font-weight: 800; font-size: 12px; color: #B5E61D">FILM</div>
+                <div style="font-family: Unbounded, sans-serif; font-weight: 700; font-size: 10px; color: #FFFFFF; margin-top: 3px">PRO</div>
+              </div>
+              <div style="font-size: 12px; color: #FFFFFF">CinePro</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+              <div style="position: relative; width: 60px; height: 60px; border-radius: 14px; background: #5BD47A; display: flex; align-items: center; justify-content: center">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1E2A22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4v16 M5 6h12 M9 11h10 M9 16h8 M5 11h2 M5 16h2"></path></svg>
+                <div style="position: absolute; right: -8px; top: -8px; min-width: 26px; height: 26px; border-radius: 13px; background: #FF3B30; font-size: 14px; font-weight: 600; color: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0 6px">62</div>
+              </div>
+              <div style="font-size: 12px; color: #FFFFFF">Tasks</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+              <div style="width: 60px; height: 60px; border-radius: 14px; background: #4A4F5A; display: flex; align-items: center; justify-content: center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5AA0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17V6l9-2v11 M8 17a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M17 15a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M20 8a5 5 0 0 1 0 6"></path></svg>
+              </div>
+              <div style="font-size: 12px; color: #FFFFFF">Audio</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+              <div style="width: 60px; height: 60px; border-radius: 14px; background: #1A1A1E; border: 1px solid #FFFFFF26; display: flex; align-items: center; justify-content: center">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#E0233A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16a8 8 0 1 1 16 0 M12 16l4-5"></path></svg>
+              </div>
+              <div style="font-size: 12px; color: #FFFFFF">Tacho</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+              <div style="width: 60px; height: 60px; border-radius: 14px; background: #000; border: 1px solid #FFFFFF2E; display: flex; align-items: center; justify-content: center">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"></path></svg>
+              </div>
+              <div style="font-size: 12px; color: #FFFFFF">AI Gen</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+              <div style="width: 60px; height: 60px; border-radius: 14px; background: #D9734E; display: flex; align-items: center; justify-content: center">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 0 0 18c1.4 0 2-1 2-2 0-1.6-1.5-2 0-3.5H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z M7.5 11h.01 M10 7.5h.01 M14.5 7.5h.01"></path></svg>
+              </div>
+              <div style="font-size: 12px; color: #FFFFFF">Canvas</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+              <div style="width: 60px; height: 60px; border-radius: 14px; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+                <div style="width: 42px; height: 42px; border-radius: 50%; background: #E3263C; display: flex; align-items: center; justify-content: center">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6 M10 21h4 M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"></path></svg>
+                </div>
+              </div>
+              <div style="font-size: 12px; color: #FFFFFF">Ideas</div>
+            </div>
+
+            <!-- Dating Finder App Button -->
+            <button onclick="openApp()" style="background: none; border: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #FFFFFF">
+              <div style="position: relative; width: 60px; height: 60px">
+                <div class="df-pulse" style="position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; border-radius: 16px; background: #FF3D6E80"></div>
+                <div style="position: relative; width: 60px; height: 60px; border-radius: 14px; background: #FF3D6E; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px #FF3D6E70">
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+                </div>
+                <div style="position: absolute; right: -8px; top: -8px; min-width: 26px; height: 26px; border-radius: 13px; background: #FF3B30; font-size: 14px; font-weight: 600; color: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0 6px">3</div>
+              </div>
+              <div style="font-size: 12px; white-space: nowrap">Dating Finder</div>
+            </button>
+          </div>
+
+          <!-- Search Widget -->
+          <div style="position: absolute; left: 50%; top: 674px; transform: translateX(-50%); padding: 6px 13px; border-radius: 999px; background: #FFFFFF1A; border: 1px solid #FFFFFF26; display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: #FFFFFFDD">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFFDD" stroke-width="3" stroke-linecap="round"><path d="M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15z M16 16l5 5"></path></svg>
+            Search
+          </div>
+
+          <!-- Dock -->
+          <div style="position: absolute; left: 16px; right: 16px; top: 728px; height: 100px; border-radius: 36px; background: #FFFFFF14; border: 1px solid #FFFFFF1F; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; justify-items: center; padding: 0 10px">
+            <div style="width: 60px; height: 60px; border-radius: 14px; background: #8E8E93; display: flex; align-items: center; justify-content: center">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#3A3A3E" stroke-width="1.8" stroke-linecap="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M12 2v3 M12 19v3 M4.2 4.2l2.1 2.1 M17.7 17.7l2.1 2.1 M2 12h3 M19 12h3 M4.2 19.8l2.1-2.1 M17.7 6.3l2.1-2.1"></path></svg>
+            </div>
+            <div style="width: 60px; height: 60px; border-radius: 14px; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+              <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2F7BF5" stroke-width="1.8" stroke-linecap="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M3 12h18 M12 3a14 14 0 0 1 0 18 M12 3a14 14 0 0 0 0 18"></path></svg>
+            </div>
+            <div style="width: 60px; height: 60px; border-radius: 14px; background: #34C759; display: flex; align-items: center; justify-content: center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M5 3h3.5l2 5-2.5 1.6a11 11 0 0 0 6.4 6.4L16 13.5l5 2V19a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"></path></svg>
+            </div>
+            <div style="width: 60px; height: 60px; border-radius: 14px; background: #FA3C4C; display: flex; align-items: center; justify-content: center">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M9 17.5V6l11-2.5V15a3 3 0 1 1-2-2.8V7.2L11 8.8v8.7a3 3 0 1 1-2-2.8z"></path></svg>
+            </div>
+          </div>
+        </div>`;
+    }
+    // 2. LAUNCH SCREEN
+    else if (state.screen === 'launch') {
+        html = `
+        <div style="height: 844px; background: #FF3D6E; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px">
+          <div class="df-zoom" style="width: 104px; height: 104px; border-radius: 30px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 16px 40px #8A0F2E66">
+            <svg width="54" height="54" viewBox="0 0 24 24" fill="#FF3D6E"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+          </div>
+          <div class="df-in" style="font-family: Unbounded, sans-serif; font-weight: 800; font-size: 26px; color: #FFFFFF">Dating Finder</div>
+          <div class="df-in" style="font-size: 14px; font-weight: 700; color: #FFFFFFCC">meet singles around you</div>
+        </div>`;
+    }
+    // 3. INTRO SCREEN
+    else if (state.screen === 'intro') {
+        html = `
+        <div class="df-in" style="height: 844px; box-sizing: border-box; padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; align-items: center; justify-content: space-between; height: 40px">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <div style="width: 32px; height: 32px; border-radius: 10px; background: #FF3D6E; display: flex; align-items: center; justify-content: center">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+              </div>
+              <div style="font-family: Unbounded, sans-serif; font-weight: 700; font-size: 15px">Dating Finder</div>
+            </div>
+            <div style="font-size: 12px; font-weight: 800; padding: 6px 10px; border-radius: 999px; border: 1px solid #3A3044; color: #C9BED3">18+</div>
+          </div>
+
+          <div style="position: relative; height: 372px; flex-shrink: 0">
+            <div style="position: absolute; left: 40%; top: 18px; width: 230px; height: 310px; border-radius: 26px; background: #21304A; transform: translateX(-50%) rotate(-9deg); opacity: 0.7"></div>
+            <div style="position: absolute; left: 60%; top: 18px; width: 230px; height: 310px; border-radius: 26px; background: #40281F; transform: translateX(-50%) rotate(8deg); opacity: 0.7"></div>
+            <div style="position: absolute; left: 50%; top: 4px; width: 250px; height: 332px; border-radius: 26px; overflow: hidden; background: #17121D; border: 1px solid #2E2638; transform: translateX(-50%); box-shadow: 0 18px 40px #00000080">
+              <div style="position: relative; width: 250px; height: 240px; overflow: hidden; background: #3A2140">
+                <img src="https://i.ibb.co/Hs0LfPg/IMG-9786.jpg" alt="Alina" style="width: 100%; height: 100%; object-fit: cover;">
+                <div style="position: absolute; left: 12px; top: 12px; padding: 5px 10px; border-radius: 999px; background: #0E0B12CC; font-size: 11px; font-weight: 800; color: #3BD47A; display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 50%; background: #3BD47A"></span>ONLINE</div>
+              </div>
+              <div style="padding: 12px 16px">
+                <div style="font-family: Unbounded, sans-serif; font-weight: 700; font-size: 18px">Alina, 23</div>
+                <div style="font-size: 13px; color: #B3A8BD; margin-top: 3px">0.4 mi away · 168 cm</div>
+              </div>
+            </div>
+            <div style="position: absolute; right: 0; top: 34px; max-width: 178px; padding: 10px 12px; border-radius: 16px 16px 4px 16px; background: #FFFFFF; color: #1A1420; box-shadow: 0 10px 24px #00000066">
+              <div style="font-size: 11px; font-weight: 800; color: #E0234F">Alina · new message</div>
+              <div style="font-size: 13px; font-weight: 700; margin-top: 2px">Hi! Are you nearby?</div>
+            </div>
+            <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; gap: 18px">
+              <button onclick="startApp()" style="width: 58px; height: 58px; border-radius: 50%; border: 1px solid #2E2638; background: #17121D; display: flex; align-items: center; justify-content: center">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C9BED3" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              </button>
+              <button onclick="startApp()" style="width: 68px; height: 68px; border-radius: 50%; border: none; background: #FF3D6E; box-shadow: 0 10px 24px #FF3D6E66; display: flex; align-items: center; justify-content: center">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <h1 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 800; font-size: 27px; line-height: 1.1">FIND DATES<br><span style="color: #FF3D6E">NEARBY YOU</span></h1>
+            <p style="margin: 8px 0 0; font-size: 15px; color: #B3A8BD; line-height: 1.4">Filter profiles by custom traits, spot girls on the map, and start chatting instantly.</p>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <span style="padding: 8px 12px; border-radius: 999px; background: #17121D; border: 1px solid #2E2638; font-size: 13px; font-weight: 700; color: #E7DEEE">Profiles Nearby</span>
+            <span style="padding: 8px 12px; border-radius: 999px; background: #17121D; border: 1px solid #2E2638; font-size: 13px; font-weight: 700; color: #E7DEEE">Custom Filters</span>
+            <span style="padding: 8px 12px; border-radius: 999px; background: #17121D; border: 1px solid #2E2638; font-size: 13px; font-weight: 700; color: #E7DEEE">Chat & Meet</span>
+          </div>
+
+          <div style="flex-grow: 1"></div>
+          <button onclick="startApp()" style="height: 60px; border: none; border-radius: 18px; background: #FF3D6E; color: #FFFFFF; font-family: Unbounded, sans-serif; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px">
+            START DISCOVERY
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </button>
+          <div style="text-align: center; font-size: 11px; color: #6F6579; margin-top: -6px">Demo prototype · all profiles are fictional · 18+ only</div>
+        </div>`;
+    }
+    // 4. PARAMS CONFIG SCREEN
+    else if (state.screen === 'params') {
+        const sizes = ['XS', 'S', 'M', 'L', 'XL'];
+        const hairs = [
+            { label: 'Blonde', hex: '#E3C27A' },
+            { label: 'Redhead', hex: '#D66A3A' },
+            { label: 'Brunette', hex: '#2E2B2A' },
+            { label: 'Brown', hex: '#7C4A2E' }
+        ];
+
+        html = `
+        <div class="df-in" style="height: 844px; box-sizing: border-box; padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; align-items: center; justify-content: space-between; height: 40px">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <button onclick="navigate('intro')" style="width: 32px; height: 32px; border-radius: 10px; background: #FF3D6E; border: none; display: flex; align-items: center; justify-content: center">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+              </button>
+              <div style="font-family: Unbounded, sans-serif; font-weight: 700; font-size: 15px">Dating Finder</div>
+            </div>
+            <div style="font-size: 12px; font-weight: 800; padding: 6px 10px; border-radius: 999px; border: 1px solid #3A3044; color: #C9BED3">18+</div>
+          </div>
+
+          <h1 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 800; font-size: 25px; line-height: 1.1">CHOOSE YOUR<br><span style="color: #FF3D6E">IDEAL MATCH</span></h1>
+
+          <div style="display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 20px; background: #17121D; border: 1px solid #261F2E">
+            <div style="display: flex; flex-shrink: 0; padding-left: 10px">
+              ${profilesData.slice(0, 3).map((g, idx) => `
+                <div style="position: relative; width: 45px; height: 45px; margin-left: ${idx === 0 ? '0' : '-12px'}; border-radius: 50%; padding: 2px; background: ${g.hairHex}">
+                  <div style="position: relative; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: ${g.bg}; border: 2px solid #17121D">
+                    <img src="${g.photo}" alt="${g.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <div style="min-width: 0">
+              <div style="font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #3BD47A"></span>Singles near your location</div>
+              <div style="font-size: 12px; color: #B3A8BD; margin-top: 2px">Set your preferences to see matching profiles</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.08em; color: #9E93A8">1 · CLOTHING SIZE</div>
+            <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+              ${sizes.map(s => `
+                <button onclick="selectSize('${s}')" style="height: 42px; border-radius: 12px; border: 1.5px solid ${state.size === s ? '#FF3D6E' : '#2E2638'}; background: ${state.size === s ? '#FF3D6E26' : '#17121D'}; color: ${state.size === s ? '#FF3D6E' : '#FFFFFF'}; font-size: 14px; font-weight: 800">${s}</button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.08em; color: #9E93A8">2 · HAIR COLOR</div>
+            <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+              ${hairs.map(h => `
+                <button onclick="selectHair('${h.label}')" style="height: 64px; border-radius: 14px; border: 1.5px solid ${state.hair === h.label ? '#FF3D6E' : '#2E2638'}; background: ${state.hair === h.label ? '#FF3D6E26' : '#17121D'}; color: ${state.hair === h.label ? '#FF3D6E' : '#FFFFFF'}; font-size: 11px; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px">
+                  <span style="width: 22px; height: 22px; border-radius: 50%; background: ${h.hex}; border: 2px solid #FFFFFF40"></span>${h.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+            <div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 16px; background: #17121D; border: 1px solid #261F2E">
+              <label style="font-size: 11px; font-weight: 800; letter-spacing: 0.08em; color: #9E93A8">3 · HEIGHT</label>
+              <div style="font-family: Unbounded, sans-serif; font-weight: 700; font-size: 18px"><span id="height-val">${state.height}</span> <span style="font-size: 12px; color: #9E93A8">cm</span></div>
+              <input type="range" min="150" max="200" step="1" value="${state.height}" oninput="updateHeight(event)">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 16px; background: #17121D; border: 1px solid #261F2E">
+              <label style="font-size: 11px; font-weight: 800; letter-spacing: 0.08em; color: #9E93A8">4 · AGE</label>
+              <div style="font-family: Unbounded, sans-serif; font-weight: 700; font-size: 18px"><span id="age-val">${state.age}</span> <span style="font-size: 12px; color: #9E93A8">yrs</span></div>
+              <input type="range" min="18" max="45" step="1" value="${state.age}" oninput="updateAge(event)">
+            </div>
+          </div>
+
+          <div style="flex-grow: 1"></div>
+          <button onclick="startSearch()" style="height: 56px; border: none; border-radius: 16px; background: #FF3D6E; color: #FFFFFF; font-family: Unbounded, sans-serif; font-weight: 800; font-size: 16px; box-shadow: 0 10px 24px #FF3D6E66">FIND MATCHES</button>
+          <div style="text-align: center; font-size: 11px; color: #6F6579">5 profiles found based on your filters</div>
+        </div>`;
+    }
+    // 5. SEARCH LOADER SCREEN
+    else if (state.screen === 'search') {
+        const deg = Math.round((state.searchProgress / 100) * 360);
+        html = `
+        <div class="df-in" style="height: 844px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 0 28px; box-sizing: border-box">
+          <div id="search-progress-circle" style="width: 220px; height: 220px; border-radius: 50%; background: conic-gradient(#FF3D6E ${deg}deg, #241D2D 0deg); display: flex; align-items: center; justify-content: center">
+            <div style="width: 196px; height: 196px; border-radius: 50%; background: #0E0B12; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+              <div style="font-family: Unbounded, sans-serif; font-weight: 800; font-size: 50px"><span id="search-progress-num">${state.searchProgress}</span><span style="font-size: 24px; color: #FF3D6E">%</span></div>
+              <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.14em; color: #9E93A8">SEARCHING</div>
+            </div>
+          </div>
+          <div style="font-family: Unbounded, sans-serif; font-weight: 700; font-size: 17px; text-align: center">Scanning location & radar...</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center">
+            <span style="padding: 8px 12px; border-radius: 999px; background: #1C1623; border: 1px solid #2E2638; font-size: 13px; font-weight: 700; color: #D9CFE2">Size: ${state.size}</span>
+            <span style="padding: 8px 12px; border-radius: 999px; background: #1C1623; border: 1px solid #2E2638; font-size: 13px; font-weight: 700; color: #D9CFE2">Hair: ${state.hair}</span>
+            <span style="padding: 8px 12px; border-radius: 999px; background: #1C1623; border: 1px solid #2E2638; font-size: 13px; font-weight: 700; color: #D9CFE2">Height: ~${state.height} cm</span>
+          </div>
+        </div>`;
+    }
+    // 6. PROFILES LIST SCREEN
+    else if (state.screen === 'list') {
+        const currentList = getFilteredProfiles();
+        html = `
+        <div class="df-in" style="height: 844px; display: flex; flex-direction: column">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 12px">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <button onclick="navigate('params')" style="width: 44px; height: 44px; border-radius: 14px; border: 1px solid #2E2638; background: #17121D; display: flex; align-items: center; justify-content: center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F0F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+              </button>
+              <div>
+                <div style="font-family: Unbounded, sans-serif; font-weight: 800; font-size: 15px">${currentList.length} MATCHES FOUND</div>
+                <div style="font-size: 12px; color: #9E93A8">${state.hair}, ~${state.height}cm height</div>
+              </div>
+            </div>
+            <button onclick="openMap()" style="padding: 10px 14px; border-radius: 14px; background: #FF3D6E; border: none; color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path></svg>
+              Map
+            </button>
+          </div>
+
+          <div class="df-scroll" style="flex: 1; overflow-y: auto; padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: none">
+            ${currentList.map(p => `
+              <div onclick="openProfile(${p.id})" style="display: flex; gap: 14px; padding: 12px; border-radius: 22px; background: #17121D; border: 1px solid #261F2E; align-items: center; cursor: pointer">
+                <div style="position: relative; width: 80px; height: 80px; flex-shrink: 0">
+                  <div style="position: relative; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: ${p.bg}">
+                    <img src="${p.photo}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div style="position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; border-radius: 50%; background: #3BD47A; border: 2px solid #17121D"></div>
+                </div>
+                <div style="flex: 1; min-width: 0">
+                  <div style="display: flex; justify-content: space-between; align-items: baseline">
+                    <div style="font-family: Unbounded, sans-serif; font-weight: 700; font-size: 16px">${p.name}, ${p.age}</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #FF3D6E">${p.dist}</div>
+                  </div>
+                  <div style="font-size: 13px; color: #9E93A8; margin-top: 2px">${p.height} cm · Size ${p.size}</div>
+                  <div style="font-size: 12px; color: #C9BED3; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">${p.bio}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+    }
+    // 7. PROFILE DETAIL SCREEN
+    else if (state.screen === 'profile' && state.activeProfile) {
+        const p = state.activeProfile;
+        html = `
+        <div class="df-in" style="height: 844px; display: flex; flex-direction: column">
+          <div style="position: relative; height: 380px; background: ${p.bg}; display: flex; align-items: center; justify-content: center">
+            <img src="${p.photo}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
+            <button onclick="navigate('list')" style="position: absolute; left: 18px; top: 18px; width: 40px; height: 40px; border-radius: 50%; background: #0E0B12AA; border: none; color: #FFF; display: flex; align-items: center; justify-content: center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" stroke-width="2.5"><path d="M15 18l-6-6 6-6"></path></svg>
+            </button>
+            <div style="position: absolute; right: 18px; top: 18px; padding: 6px 12px; border-radius: 999px; background: #0E0B12AA; font-size: 12px; font-weight: 800; color: #3BD47A">ONLINE</div>
+          </div>
+          <div style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 14px; background: #0E0B12">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline">
+                <div style="font-family: Unbounded, sans-serif; font-weight: 800; font-size: 22px">${p.name}, ${p.age}</div>
+                <div style="font-size: 14px; font-weight: 700; color: #FF3D6E">${p.dist} away</div>
+              </div>
+              <div style="font-size: 13px; color: #9E93A8; margin-top: 4px">${p.height} cm · Size ${p.size} · ${p.hair}</div>
+            </div>
+            <div style="padding: 14px; border-radius: 16px; background: #17121D; border: 1px solid #261F2E; font-size: 14px; color: #E7DEEE; line-height: 1.4">
+              ${p.bio}
+            </div>
+            <div style="display: flex; gap: 8px">
+              <span style="padding: 6px 12px; border-radius: 999px; background: #1C1623; border: 1px solid #2E2638; font-size: 12px; font-weight: 700">☕ Coffee</span>
+              <span style="padding: 6px 12px; border-radius: 999px; background: #1C1623; border: 1px solid #2E2638; font-size: 12px; font-weight: 700">🚶 Walks</span>
+              <span style="padding: 6px 12px; border-radius: 999px; background: #1C1623; border: 1px solid #2E2638; font-size: 12px; font-weight: 700">🎨 Art</span>
+            </div>
+            <div style="flex-grow: 1"></div>
+            <button onclick="openChat()" style="height: 56px; border-radius: 16px; background: #FF3D6E; border: none; color: #FFF; font-family: Unbounded, sans-serif; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 24px #FF3D6E66">
+              SEND MESSAGE
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </button>
+          </div>
+        </div>`;
+    }
+    // 8. MAP SCREEN
+    else if (state.screen === 'map') {
+        const currentList = getFilteredProfiles();
+        html = `
+        <div class="df-in" style="height: 844px; display: flex; flex-direction: column; position: relative; background: #0c1017; font-family: Manrope, sans-serif;">
+          <div style="position: absolute; inset: 0; overflow: hidden; pointer-events: none;">
+            <svg width="100%" height="100%" viewBox="0 0 390 844" preserveAspectRatio="none">
+              <path d="M -50 200 C 120 300, 80 500, 200 890" stroke="#132338" stroke-width="75" fill="none" opacity="0.8"/>
+              <path d="M -50 200 C 120 300, 80 500, 200 890" stroke="#1d3557" stroke-width="35" fill="none" opacity="0.6"/>
+              <circle cx="280" cy="320" r="85" fill="#13201d" opacity="0.7"/>
+              <circle cx="90" cy="550" r="70" fill="#13201d" opacity="0.7"/>
+              <path d="M 220 100 Q 300 150, 350 100 Z" fill="#13201d" opacity="0.7"/>
+              <line x1="0" y1="150" x2="390" y2="150" stroke="#1a2536" stroke-width="8" />
+              <line x1="0" y1="350" x2="390" y2="350" stroke="#1a2536" stroke-width="12" />
+              <line x1="0" y1="580" x2="390" y2="580" stroke="#1a2536" stroke-width="10" />
+              <line x1="120" y1="0" x2="120" y2="844" stroke="#1a2536" stroke-width="10" />
+              <line x1="260" y1="0" x2="260" y2="844" stroke="#1a2536" stroke-width="14" />
+            </svg>
+            <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, transparent 30%, #06090ee8 95%);"></div>
+          </div>
+          
+          <div style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; z-index: 10">
+            <button onclick="navigate('list')" style="width: 44px; height: 44px; border-radius: 14px; border: 1px solid #2E2638; background: #0E0B1DEE; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; color: #FFF; box-shadow: 0 8px 20px rgba(0,0,0,0.5)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" stroke-width="2.5"><path d="M15 18l-6-6 6-6"></path></svg>
+            </button>
+            <div style="padding: 10px 18px; border-radius: 999px; background: #0E0B1DEE; backdrop-filter: blur(10px); border: 1px solid #2E2638; font-size: 13px; font-weight: 800; color: #F5F0F7; box-shadow: 0 8px 20px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #FF3D6E"></span> ${state.hair} ON MAP
+            </div>
+            <div style="width: 44px"></div>
+          </div>
+
+          <div style="position: relative; flex: 1; z-index: 5">
+            <div style="position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none;">
+              <div class="df-pulse" style="position: absolute; width: 80px; height: 80px; border-radius: 50%; background: #2F7BF555;"></div>
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: #2F7BF5; border: 4px solid #FFFFFF; box-shadow: 0 4px 16px rgba(47,123,245,0.8)"></div>
+              <span style="font-size: 11px; font-weight: 800; background: #0E0B1DEE; color: #FFF; padding: 3px 10px; border-radius: 999px; border: 1px solid #2F7BF566; box-shadow: 0 4px 12px rgba(0,0,0,0.5)">You are here</span>
+            </div>
+
+            ${currentList.map((p, idx) => {
+                const coords = [
+                    {left: '22%', top: '28%'},
+                    {left: '74%', top: '22%'},
+                    {left: '28%', top: '68%'},
+                    {left: '78%', top: '62%'},
+                    {left: '52%', top: '18%'}
+                ][idx % 5];
+                return `
+                <div onclick="openProfile(${p.id})" class="df-pin" style="position: absolute; left: ${coords.left}; top: ${coords.top}; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; transform: translate(-50%, -50%); z-index: 6">
+                  <div style="position: relative; width: 56px; height: 56px; border-radius: 50%; padding: 3px; background: linear-gradient(135deg, #FF3D6E, #FF883D); box-shadow: 0 8px 24px rgba(255,61,110,0.4)">
+                    <div style="width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: #17121D; border: 2px solid #0E0B12">
+                      <img src="${p.photo}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div style="position: absolute; right: 0; bottom: 0; width: 14px; height: 14px; border-radius: 50%; background: #3BD47A; border: 2px solid #0E0B12"></div>
+                  </div>
+                  <div style="background: #0E0B1DEE; backdrop-filter: blur(8px); border: 1px solid #2E2638; padding: 3px 9px; border-radius: 999px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.6)">
+                    <span style="font-size: 11px; font-weight: 800; color: #FFF">${p.name}</span>
+                    <span style="font-size: 10px; font-weight: 700; color: #FF3D6E">${p.dist}</span>
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>
+
+          <div style="position: absolute; bottom: 24px; left: 20px; right: 20px; background: #0E0B1DEE; backdrop-filter: blur(12px); border: 1px solid #2E2638; padding: 14px 18px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; z-index: 10; box-shadow: 0 12px 30px rgba(0,0,0,0.7)">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <div style="width: 36px; height: 36px; border-radius: 12px; background: #FF3D6E26; display: flex; align-items: center; justify-content: center; color: #FF3D6E">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path></svg>
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 800; color: #FFF">Tap on any profile pin</div>
+                <div style="font-size: 11px; color: #9E93A8">To view details and start chatting</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+    // 9. CHAT SCREEN
+    else if (state.screen === 'chat') {
+        const activeGirl = state.activeProfile || profilesData[0];
+        html = `
+        <div class="df-in" style="height: 844px; display: flex; flex-direction: column; background: #0E0B12">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #1E1726">
+            <button onclick="navigate('list')" style="width: 38px; height: 38px; border-radius: 12px; border: 1px solid #2E2638; background: #17121D; display: flex; align-items: center; justify-content: center; color: #FFF">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFF" stroke-width="2.5"><path d="M15 18l-6-6 6-6"></path></svg>
+            </button>
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: #3A2140; overflow: hidden; position: relative">
+              <img src="${activeGirl.photo}" alt="${activeGirl.name}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div>
+              <div style="font-family: Unbounded, sans-serif; font-weight: 800; font-size: 15px">${activeGirl.name}</div>
+              <div style="font-size: 11px; color: #3BD47A; font-weight: 700">online</div>
+            </div>
+          </div>
+
+          <div class="df-scroll" style="flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: none">
+            ${state.chatMessages.map(m => `
+              <div style="max-width: 75%; padding: 12px 16px; border-radius: 16px; font-size: 13px; line-height: 1.4; ${m.sender === 'me' ? 'align-self: flex-end; background: #FF3D6E; color: #FFF; border-bottom-right-radius: 4px;' : 'align-self: flex-start; background: #17121D; border: 1px solid #261F2E; color: #F5F0F7; border-bottom-left-radius: 4px;'}">
+                ${m.text}
+              </div>
+            `).join('')}
+          </div>
+
+          <form onsubmit="sendChatMessage(event)" style="padding: 16px 20px; border-top: 1px solid #1E1726; display: flex; gap: 10px; background: #0E0B12">
+            <input type="text" value="${state.chatInput}" oninput="state.chatInput = this.value" placeholder="Type a message..." style="flex: 1; height: 46px; border-radius: 14px; background: #17121D; border: 1px solid #261F2E; padding: 0 16px; color: #FFF; font-family: inherit; font-size: 14px; outline: none">
+            <button type="submit" style="width: 46px; height: 46px; border-radius: 14px; background: #FF3D6E; border: none; display: flex; align-items: center; justify-content: center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFF"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+          </form>
+        </div>`;
+    }
+
+    app.innerHTML = html;
+}
+
+window.onload = function() {
+    render();
+};
+</script>
+
+</body>
+</html>
